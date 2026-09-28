@@ -254,17 +254,29 @@ fi
 # ---------------------------------------------------------------------------
 # STEP 4. Persistent AI Compilation & Model Caches Setup
 # ---------------------------------------------------------------------------
-log "Configuring persistent AI compilation and model caches..."
-mkdir -p /workspace/vllm_cache /workspace/flashinfer_cache /workspace/huggingface_cache
+log "Configuring persistent AI compilation, model, and graph caches..."
+mkdir -p /workspace/vllm_cache \
+         /workspace/flashinfer_cache \
+         /workspace/huggingface_cache \
+         /workspace/torch_cache \
+         /workspace/triton_cache
 
-for target in vllm flashinfer huggingface; do
-    if [ ! -L /root/.cache/$target ]; then
-        mkdir -p /root/.cache
-        if [ -d /root/.cache/$target ]; then
-            cp -rn /root/.cache/$target/* /workspace/${target}_cache/ 2>/dev/null || true
-            rm -rf /root/.cache/$target
+for target in vllm flashinfer huggingface torch triton; do
+    # Map cache home directories based on target type
+    target_path="/root/.cache/$target"
+    if [ "$target" = "torch" ]; then
+        target_path="/root/.torch"
+    elif [ "$target" = "triton" ]; then
+        target_path="/root/.triton"
+    fi
+
+    if [ ! -L "$target_path" ]; then
+        mkdir -p "$(dirname "$target_path")"
+        if [ -d "$target_path" ]; then
+            cp -rn "$target_path"/* /workspace/${target}_cache/ 2>/dev/null || true
+            rm -rf "$target_path"
         fi
-        ln -s /workspace/${target}_cache /root/.cache/$target
+        ln -s /workspace/${target}_cache "$target_path"
         log "${target} cache successfully linked to persistent volume."
     fi
 done
@@ -301,6 +313,10 @@ export HF_HUB_DISABLE_TELEMETRY=1
 export ANONYMIZED_TELEMETRY=False
 export TOKENIZERS_PARALLELISM=false
 export NCCL_DEBUG=WARN
+export TORCH_HOME="/workspace/torch_cache"
+export TRITON_CACHE_DIR="/workspace/triton_cache"
+export VLLM_CACHED_CODES_DIR="/workspace/vllm_cache"
+export HF_HOME="/workspace/huggingface_cache"
 
 source "${RUNTIME_ENV}"
 
@@ -350,6 +366,7 @@ while true; do
       --tensor-parallel-size "${TENSOR_PARALLEL_SIZE}" \
       --gpu-memory-utilization "${GPU_MEM_UTIL}" \
       --max-model-len "${MAX_MODEL_LEN}" \
+      --download-dir "/workspace/huggingface_cache" \
       --host 127.0.0.1 \
       --port "${VLLM_PORT}" \
       --uvicorn-log-level warning \
@@ -364,6 +381,7 @@ while true; do
       --tensor-parallel-size "${TENSOR_PARALLEL_SIZE}" \
       --gpu-memory-utilization "${GPU_MEM_UTIL}" \
       --max-model-len "${MAX_MODEL_LEN}" \
+      --download-dir "/workspace/huggingface_cache" \
       --host 127.0.0.1 \
       --port "${VLLM_PORT}" \
       --uvicorn-log-level warning \

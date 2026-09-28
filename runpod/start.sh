@@ -252,12 +252,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# STEP 4. Persistent vLLM Cache Setup
+# STEP 4. Persistent AI Compilation & Model Caches Setup
 # ---------------------------------------------------------------------------
-log "Configuring persistent AI compilation caches..."
-mkdir -p /workspace/vllm_cache /workspace/flashinfer_cache
+log "Configuring persistent AI compilation and model caches..."
+mkdir -p /workspace/vllm_cache /workspace/flashinfer_cache /workspace/huggingface_cache
 
-for target in vllm flashinfer; do
+for target in vllm flashinfer huggingface; do
     if [ ! -L /root/.cache/$target ]; then
         mkdir -p /root/.cache
         if [ -d /root/.cache/$target ]; then

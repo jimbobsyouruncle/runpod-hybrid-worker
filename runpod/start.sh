@@ -254,18 +254,20 @@ fi
 # ---------------------------------------------------------------------------
 # STEP 4. Persistent vLLM Cache Setup
 # ---------------------------------------------------------------------------
-log "Configuring persistent vLLM graph cache..."
-mkdir -p /workspace/vllm_cache
+log "Configuring persistent AI compilation caches..."
+mkdir -p /workspace/vllm_cache /workspace/flashinfer_cache
 
-if [ ! -L /root/.cache/vllm ]; then
-    mkdir -p /root/.cache
-    if [ -d /root/.cache/vllm ]; then
-        cp -rn /root/.cache/vllm/* /workspace/vllm_cache/ 2>/dev/null || true
-        rm -rf /root/.cache/vllm
+for target in vllm flashinfer; do
+    if [ ! -L /root/.cache/$target ]; then
+        mkdir -p /root/.cache
+        if [ -d /root/.cache/$target ]; then
+            cp -rn /root/.cache/$target/* /workspace/${target}_cache/ 2>/dev/null || true
+            rm -rf /root/.cache/$target
+        fi
+        ln -s /workspace/${target}_cache /root/.cache/$target
+        log "${target} cache successfully linked to persistent volume."
     fi
-    ln -s /workspace/vllm_cache /root/.cache/vllm
-    log "vLLM cache successfully linked to persistent volume."
-fi
+done
 
 # ---------------------------------------------------------------------------
 # STEP 5. Tidy shutdown

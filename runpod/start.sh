@@ -252,7 +252,23 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# STEP 4. Tidy shutdown
+# STEP 4. Persistent vLLM Cache Setup
+# ---------------------------------------------------------------------------
+log "Configuring persistent vLLM graph cache..."
+mkdir -p /workspace/vllm_cache
+
+if [ ! -L /root/.cache/vllm ]; then
+    mkdir -p /root/.cache
+    if [ -d /root/.cache/vllm ]; then
+        cp -rn /root/.cache/vllm/* /workspace/vllm_cache/ 2>/dev/null || true
+        rm -rf /root/.cache/vllm
+    fi
+    ln -s /workspace/vllm_cache /root/.cache/vllm
+    log "vLLM cache successfully linked to persistent volume."
+fi
+
+# ---------------------------------------------------------------------------
+# STEP 5. Tidy shutdown
 # ---------------------------------------------------------------------------
 CLEANUP_DONE=0
 cleanup() {
@@ -274,7 +290,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # ---------------------------------------------------------------------------
-# STEP 5. Start vLLM 
+# STEP 6. Start vLLM 
 # ---------------------------------------------------------------------------
 export VLLM_CONFIGURE_LOGGING=0
 export VLLM_NO_USAGE_STATS=1

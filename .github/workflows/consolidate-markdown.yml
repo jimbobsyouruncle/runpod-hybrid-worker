@@ -1,0 +1,21 @@
+name: Consolidate Markdown for RAG
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.py'
+      - '**/*.sh'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/Dockerfile'
+  workflow_dispatch:
+
+# FIXED: Explicitly grant write access so the bot can commit the new file
+permissions:
+  contents: write
+  
+jobs:
+  consolidate:
+    uses: jimbobsyouruncle/shared-actions/.github/workflows/consolidate-markdown.yml@main

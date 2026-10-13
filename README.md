@@ -76,3 +76,26 @@ Start the pod manually once. Check the RunPod console logs for the following seq
 [start.sh] Mesh address acquired: 100.x.x.x
 [start.sh] Arming idle watchdog: 15 min @ 0% GPU -> podStop
 [start.sh] Launching vLLM -- model=Qwen/... tp=1 port=8000
+```
+
+---
+
+## Agent context maps
+
+This repository checks in two generated maps at the repo root so an agent can
+orient itself quickly:
+
+* `REPO_MAP.md` — a high-level map of the repository layout.
+* `CODE_INDEX.md` — an index of the tracked source files.
+
+Both are generated from the pinned tool in `shared-actions` (see the
+`.github/workflows/agent-context.yml` workflow). Regenerate them from the repo
+root with:
+
+```bash
+python3 agent-context/generate.py --root . --output-dir . --max-bytes 20480
+```
+
+The `scripts/check-agent-context.sh` check (exercised by
+`scripts/test-check-agent-context.sh`) fails when the checked-in maps are stale
+or when a retired `CONSOLIDATED_*.md` dump is still tracked.
